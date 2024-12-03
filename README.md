@@ -1,2 +1,6 @@
 # AoC2024
 Advent of Code 2024
+
+Testing the capabilities of my Friently language with the Advent of Code 2024 puzzles...
+
+... and trying purely-functional versions (except I/Os) in OCaml...
