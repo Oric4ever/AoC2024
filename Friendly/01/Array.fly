@@ -1,0 +1,28 @@
+module Array
+
+(* Simple selection sort *)
+procedure IntSort*(var tab: array of integer)
+
+  function indexOfSmallestFrom(tab: array of integer; startIndex: integer): integer 
+  var i, indexOfSmallest: integer
+  begin
+    indexOfSmallest := startIndex
+    for i:=startIndex to high(tab) do
+      if tab[i] < tab[indexOfSmallest] then indexOfSmallest := i end
+    end
+    return indexOfSmallest
+  end indexOfSmallestFrom
+
+  procedure swap(var var1,var2: integer)
+  begin
+    let tmp = var1
+    var1   := var2
+    var2   := tmp
+  end swap
+
+  var i: integer        (* TODO: implement automatic declaration of loop variables *)
+begin
+  for i:=0 to high(tab) do swap(tab[i], tab[indexOfSmallestFrom(tab, i)]) end
+end IntSort
+
+end Array.

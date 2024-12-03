@@ -1,0 +1,51 @@
+program Day01
+  import In, Out, Array
+  const NB_LINES = 1000
+  type List = array NB_LINES of integer
+  var list1, list2 : List
+  
+  procedure init
+    var line : integer (* TODO: implement automatic declaration of loop variables *)
+  begin
+    for line:=1 to NB_LINES do
+      In.Int(list1[line-1])
+      In.Int(list2[line-1])
+    end
+    Array.IntSort(list1)
+    Array.IntSort(list2)
+  end init
+  
+  procedure part1
+    var line : integer
+  begin
+    var sum := 0
+    for line:=1 to NB_LINES do inc(sum, abs(list1[line-1] - list2[line-1])) end
+    Out.Int(sum); Out.Ln
+  end part1
+  
+  procedure part2
+    procedure count(value: integer; list: List): integer
+      var line: integer
+    begin
+      var count := 0
+      for line  := 1 to NB_LINES do
+        if list[line-1] = value then inc(count) end
+      end
+      return count
+    end count
+  
+    var line : integer
+  begin
+    var sum := 0
+    for line := 1 to NB_LINES do
+      let value = list1[line-1]
+      inc(sum, value*count(value, list2))
+    end
+    Out.Int(sum); Out.Ln
+  end part2
+  
+begin
+  init
+  part1
+  part2
+end Day01.
