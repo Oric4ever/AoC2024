@@ -1,0 +1,71 @@
+program Day03b
+import In,Out
+const NB_LINES = 6
+      EOL = 0AX
+var sum, line: integer
+    enabled  : boolean
+
+procedure read_num(var x: integer; var success: boolean)
+  var ch: char
+begin
+  x := 0
+  In.Char(ch)
+  var digits := 0
+  while (ch >= "0") and (ch <= "9") do
+    inc(digits)
+    x := x * 10 + ord(ch) - ord("0")
+    In.Char(ch)
+  end
+  In.PushBack(ch)
+  success := (digits > 0) and (digits < 4)
+end read_num
+
+procedure scan
+  var x,y: integer
+      ch : char
+      ok : boolean
+begin
+  In.Char(ch) 
+  while ch # EOL do
+    if ch = "m" then In.Char(ch)
+      if ch = "u" then In.Char(ch)
+        if ch = "l" then In.Char(ch)
+          if ch = "(" then read_num(x, ok)
+            if ok then In.Char(ch)
+              if ch = "," then read_num(y, ok)
+                if ok then In.Char(ch)
+                  if ch = ")" then
+                    if enabled then inc(sum, x*y) end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    elsif ch = "d" then In.Char(ch)
+      if ch = "o" then In.Char(ch)
+        if ch = "(" then In.Char(ch)
+          if ch = ")" then enabled := true end
+        else
+          if ch = "n" then In.Char(ch)
+            if ch = "'" then In.Char(ch)
+              if ch = "t" then In.Char(ch)
+                if ch = "(" then In.Char(ch)
+                  if ch = ")" then enabled := false end
+                end
+              end
+            end
+          end
+        end
+      end
+    else In.Char(ch)
+    end
+  end
+end scan
+
+begin
+  enabled := true
+  for line:=1 to 6 do scan end
+  Out.Int(sum); Out.Ln
+end Day03b.

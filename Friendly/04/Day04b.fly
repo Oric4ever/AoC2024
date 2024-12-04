@@ -1,0 +1,29 @@
+program Day04b
+import In,Out
+const SIZE=140
+type Grid = array SIZE,SIZE+1 of char
+var grid : Grid
+    count: integer
+
+procedure test(x,y: integer)
+begin
+  if (x >= 1) and (x < SIZE-1) and (y >= 1) and (y < SIZE-1) then
+    if   (grid[y-1][x-1] = "M") and (grid[y+1][x+1] = "S") or (grid[y-1][x-1] = "S") and (grid[y+1][x+1] = "M") then
+      if (grid[y-1][x+1] = "M") and (grid[y+1][x-1] = "S") or (grid[y-1][x+1] = "S") and (grid[y+1][x-1] = "M") then
+        inc(count)
+      end
+    end
+  end
+end test
+
+var i,x,y: integer
+begin
+  for i := 1 to SIZE do In.Line(grid[i-1]) end
+
+  for x := 0 to SIZE-1 do
+    for y := 0 to SIZE-1 do
+      if grid[y][x] = "A" then test(x,y) end
+    end
+  end
+  Out.Int(count); Out.Ln
+end Day04b.

@@ -1,0 +1,69 @@
+program Day02
+  import In, Out
+  const NB_LINES = 1000
+        NB_LEVELS = 20
+  type Report = record 
+                  nb_levels : integer
+                  levels    : array NB_LEVELS of integer
+                end
+
+  procedure read_report(var report: Report)
+  var ch: char
+  begin
+    In.Int(report.levels[0])
+    In.Char(ch)
+    report.nb_levels := 1
+    while ch = " " do
+      In.Int(report.levels[report.nb_levels])
+      inc(report.nb_levels)
+      In.Char(ch)
+    end
+  end read_report
+
+  function report_is_safe(report: Report): boolean
+    var i: integer
+  begin
+    var safe      := (report.levels[0] # report.levels[1]) and (abs(report.levels[0] - report.levels[1]) < 4)
+    let increasing =  report.levels[0] < report.levels[1]
+    for i := 2 to report.nb_levels-1 do
+      let previous = report.levels[i-1]
+      let next     = report.levels[i]
+      safe := safe and (previous # next) and ((previous < next) = increasing) and (abs(next-previous) < 4)
+    end
+    return safe
+  end report_is_safe
+
+  procedure remove_level(report: Report; index_to_remove: integer; var result: Report)
+    var indx1: integer
+  begin
+    var indx2 := 0
+    for indx1 := 0 to report.nb_levels-1 do
+      if indx1 # index_to_remove then
+        result.levels[indx2] := report.levels[indx1]
+        inc(indx2)
+      end
+    end
+    result.nb_levels := report.nb_levels-1
+  end remove_level
+
+  var i, line, count, count2 : integer
+      report, fixed_report   : Report
+      safe_with_a_single_bad_level : boolean
+begin
+  count := 0
+  for line:=1 to NB_LINES do
+    read_report(report)
+    if report_is_safe(report)
+    then inc(count)
+    else 
+      safe_with_a_single_bad_level := false
+      for i := 0 to report.nb_levels-1 do
+        remove_level(report, i, fixed_report)
+        if report_is_safe(fixed_report) then safe_with_a_single_bad_level := true end
+      end
+      if safe_with_a_single_bad_level then inc(count2) end
+    end
+  end
+  Out.Int(count); Out.Ln
+  Out.Int(count+count2); Out.Ln
+end Day02.

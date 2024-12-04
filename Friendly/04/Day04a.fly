@@ -1,0 +1,44 @@
+program Day04a
+import In,Out
+const SIZE=140
+type Grid = array SIZE,SIZE+1 of char
+var grid: Grid
+    line, count: integer
+    dirX, dirY: array 8 of integer
+
+procedure init
+  var i: integer
+begin
+  for i:=1 to SIZE do In.Line(grid[i-1]) end
+  dirX[0] := +1; dirY[0] :=  0
+  dirX[1] :=  0; dirY[1] := +1
+  dirX[2] := -1; dirY[2] :=  0
+  dirX[3] :=  0; dirY[3] := -1
+  dirX[4] := +1; dirY[4] := +1
+  dirX[5] := +1; dirY[5] := -1
+  dirX[6] := -1; dirY[6] := +1
+  dirX[7] := -1; dirY[7] := -1
+end init
+
+procedure test(x,y: integer)
+  var dir: integer
+begin
+  for dir := 0 to 7 do
+    let dx = dirX[dir]
+    let dy = dirY[dir]
+    if (x+3*dx >= 0) and (x+3*dx < SIZE) and (y+3*dy >= 0) and (y+3*dy < SIZE) then
+      if (grid[y+dy][x+dx] = "M") and (grid[y+2*dy][x+2*dx] = "A") and (grid[y+3*dy][x+3*dx] = "S") then inc(count) end
+    end
+  end
+end test
+
+var x,y: integer
+begin
+  init
+  for x := 0 to SIZE-1 do
+    for y := 0 to SIZE-1 do
+      if grid[y][x] = "X" then test(x,y) end
+    end
+  end
+  Out.Int(count); Out.Ln
+end Day04a.
