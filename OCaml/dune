@@ -1,3 +1,4 @@
 (executable (name Day01) (modules Day01))
 (executable (name Day02) (modules Day02))
 (executable (name Day03) (modules Day03) (libraries str))
+(executable (name Day04) (modules Day04))
