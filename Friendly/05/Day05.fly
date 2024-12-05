@@ -1,21 +1,21 @@
 program Day05
-import In,Out
+import Input, In, Out
 const LISTSIZE   = 40
-      NB_UPDATES = 196
 
 type List = record
               length : integer
               items  : array LISTSIZE of integer
             end
-var order: array 100+1,100+1 of boolean
+var order: array 100,100 of boolean
 
 procedure read_ordering_rules
+  function digit(ch: char): integer; return ord(ch)-ord("0"); end digit
   var line: array 8 of char
 begin
   In.Line(line)
   while line # "" do
-    let first  = (ord(line[0]) - ord("0")) * 10 + (ord(line[1]) - ord("0"))
-    let second = (ord(line[3]) - ord("0")) * 10 + (ord(line[4]) - ord("0"))
+    let first  = digit(line[0]) * 10 + digit(line[1])
+    let second = digit(line[3]) * 10 + digit(line[4])
     order[first][second] := true
     In.Line(line)
   end
@@ -74,17 +74,27 @@ begin
   for i := 0 to update.length-1 do swap(update.items[i], update.items[select_index(update,i)]) end
 end sort_update
 
+function end_of_file(): boolean (* TODO: add such a function to standard library *)
+  const EOF = 0FFX
+  var ch: char
+begin
+  In.Char(ch)
+  In.PushBack(ch)
+  return ch = EOF
+end end_of_file
+
 var update  : List
     sum_part1, sum_part2, i, j : integer
     ordered : boolean
+    ch      : char
 begin
   read_ordering_rules
-  for i := 1 to NB_UPDATES do
+  repeat
     read_update(update)
     if is_ordered(update) then inc(sum_part1, middle_page(update))
     else sort_update(update) ; inc(sum_part2, middle_page(update))
     end
-  end
+  until end_of_file()
   Out.Int(sum_part1); Out.Ln
   Out.Int(sum_part2); Out.Ln
 end Day05.
