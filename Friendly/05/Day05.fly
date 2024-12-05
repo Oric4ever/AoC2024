@@ -1,0 +1,90 @@
+program Day05
+import In,Out
+const LISTSIZE   = 40
+      NB_UPDATES = 196
+
+type List = record
+              length : integer
+              items  : array LISTSIZE of integer
+            end
+var order: array 100+1,100+1 of boolean
+
+procedure read_ordering_rules
+  var line: array 8 of char
+begin
+  In.Line(line)
+  while line # "" do
+    let first  = (ord(line[0]) - ord("0")) * 10 + (ord(line[1]) - ord("0"))
+    let second = (ord(line[3]) - ord("0")) * 10 + (ord(line[4]) - ord("0"))
+    order[first][second] := true
+    In.Line(line)
+  end
+end read_ordering_rules
+
+procedure read_update(var update: List)
+  var page: integer
+      separator : char
+begin
+  var length := 0
+  repeat
+    In.Int(page)
+    update.items[length] := page
+    inc(length)
+    In.Char(separator)
+  until separator # ","
+  update.length := length 
+end read_update
+
+function is_ordered(update: List): boolean
+  var i: integer
+begin
+  var ordered := true
+  for i := 1 to update.length-1 do
+    let first = update.items[i-1]
+    let next  = update.items[i]
+    assert( order[first][next] or order[next][first] )
+    if not order[first][next] then ordered := false end
+  end
+  return ordered
+end is_ordered
+
+function middle_page(update: List): integer
+return update.items[update.length div 2]
+end middle_page
+
+procedure swap(var var1, var2: integer)  (* TODO: make it a Friendly instruction *)
+begin
+  var tmp  := var1
+      var1 := var2
+      var2 := tmp
+end swap
+ 
+procedure sort_update(var update: List)
+  function select_index(update: List; start_index: integer): integer
+    var index: integer
+  begin
+    var index_of_smallest := start_index
+    for index := start_index+1 to update.length-1 do
+      if order [update.items[index]] [update.items[index_of_smallest]] then index_of_smallest := index end
+    end
+    return index_of_smallest
+  end select_index
+  var i : integer
+begin
+  for i := 0 to update.length-1 do swap(update.items[i], update.items[select_index(update,i)]) end
+end sort_update
+
+var update  : List
+    sum_part1, sum_part2, i, j : integer
+    ordered : boolean
+begin
+  read_ordering_rules
+  for i := 1 to NB_UPDATES do
+    read_update(update)
+    if is_ordered(update) then inc(sum_part1, middle_page(update))
+    else sort_update(update) ; inc(sum_part2, middle_page(update))
+    end
+  end
+  Out.Int(sum_part1); Out.Ln
+  Out.Int(sum_part2); Out.Ln
+end Day05.
