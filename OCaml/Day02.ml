@@ -16,7 +16,7 @@ let is_safe report = is_increasing report || is_decreasing report
 
 let () = List.filter is_safe input |> List.length |> Printf.printf "Part 1: %d \n"
 
-let rec remove_level lst index e = if index = 0 then List.tl lst else List.hd lst :: remove_level (List.tl lst) (index-1) e
+let remove_level lst index _ = List.filteri (fun i _ -> i<>index) lst
 
 let or_map = List.fold_left (||) false
 let is_nearly_safe report = List.mapi (remove_level report) report |> List.map is_safe |> or_map
