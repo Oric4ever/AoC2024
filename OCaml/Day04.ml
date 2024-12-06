@@ -17,3 +17,10 @@ let count x y = if grid.(y).(x)='X' then List.filter (fun f -> f x y) dirs |> Li
 let sum = Array.fold_left (+) 0
 let count_all = Array.mapi (fun y line -> Array.mapi (fun x _ -> count x y) line) grid
 let () = Array.map sum count_all |> sum |> Printf.printf "Part 1: %d\n"
+
+let cross_mas x y = x>0 && x<size-1 && y>0 && y<size-1 && grid.(y).(x)='A'
+                    && (grid.(y-1).(x-1)='M' && grid.(y+1).(x+1)='S' || grid.(y-1).(x-1)='S' && grid.(y+1).(x+1)='M')
+                    && (grid.(y-1).(x+1)='M' && grid.(y+1).(x-1)='S' || grid.(y-1).(x+1)='S' && grid.(y+1).(x-1)='M')
+let count_crosses = Array.mapi (fun y line -> Array.mapi (fun x _ -> if cross_mas x y then 1 else 0) line) grid
+let () = Array.map sum count_crosses |> sum |> Printf.printf "Part 2: %d\n"
+
