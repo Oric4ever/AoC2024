@@ -1,0 +1,71 @@
+program Day07
+import In,Out
+const NBLINES=850
+      MAXOPS = 20
+type Int64 = 64 bits integer
+     Line  = record
+                test   : Int64
+                nb_ops : integer
+                values : array MAXOPS of Int64
+             end
+
+procedure read_line(var line: Line)
+  var ch: char
+      number: integer
+begin
+  line.test := 0
+  In.Char(ch)
+  while (ch >= "0") and (ch <= "9") do
+    line.test := line.test * 10 + ord(ch) - ord("0")
+    In.Char(ch)
+  end
+  assert( ch = ":" )
+  
+  line.nb_ops := 0
+  In.Char(ch)
+  while ch = " " do
+    inc(line.nb_ops)
+    In.Int(number)
+    line.values[line.nb_ops] := number
+    In.Char(ch)
+  end
+end read_line
+
+function calibrated(line: Line; index: integer; acc: Int64): boolean
+begin
+  let op = line.values[index]
+  return if index > line.nb_ops then (acc = line.test) else calibrated(line, index+1, acc+op) or calibrated(line, index+1, acc*op)
+end calibrated
+
+function power10_above(value: Int64): Int64
+  var power10 : Int64
+begin
+  power10 := 10
+  while power10 <= value do power10 := power10 * 10 end
+  return power10
+end power10_above
+
+function calibrated2(line: Line; index: integer; acc: Int64): boolean
+begin
+  let op = line.values[index]
+  let scale = power10_above(op)
+  return if index > line.nb_ops then (acc=line.test) else calibrated2(line,index+1,acc+op) or calibrated2(line,index+1,acc*op) or calibrated2(line,index+1,acc*scale+op)
+end calibrated2
+
+  var sum1, sum2 : Int64
+      line       : Line
+      i          : integer
+begin
+  for i := 1 to NBLINES do
+    read_line(line)
+    if calibrated(line, 1, 0) then inc(sum1, line.test)
+    elsif calibrated2(line, 1, 0) then inc(sum2, line.test)
+    end
+  end
+  Out.Int(integer(sum1 div 1000000000))
+  Out.Int(integer(sum1 mod 1000000000))
+  Out.Ln
+  Out.Int(integer((sum1+sum2) div 1000000000))
+  Out.Int(integer((sum1+sum2) mod 1000000000))
+  Out.Ln
+end Day07.
