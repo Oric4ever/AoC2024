@@ -1,7 +1,8 @@
-program Day08
+program Day08 (* compiled with -release because of erroneous debug information on procedure-typed parameters *)
 import In,Out
 const SIZE = 50
 type AntinodeMap = array SIZE,SIZE of boolean
+     Method = procedure(var map: AntinodeMap; x1,y1,x2,y2: integer)
 var area: array SIZE,SIZE+1 of char
 
 procedure mark(var map: AntinodeMap; x,y: integer)
@@ -41,7 +42,7 @@ begin
   end
 end method2
 
-procedure mark_antinodes(var map: AntinodeMap; method: integer)
+procedure mark_antinodes(var map: AntinodeMap; method: Method)
   var x1,y1,x2,y2: integer
 begin
   for y1 := 0 to SIZE-1 do
@@ -51,9 +52,7 @@ begin
         y2 := y1 ; x2 := x1 +1
         while y2 < SIZE do
           while x2 < SIZE do
-            if area[y2][x2] = frequency then
-              if method = 1 then method1(map,x1,y1,x2,y2) else method2(map,x1,y1,x2,y2) end
-            end
+            if area[y2][x2] = frequency then method(map,x1,y1,x2,y2) end
             inc(x2)
           end
           x2 := 0 ; inc(y2)
@@ -80,6 +79,6 @@ end count
 begin
   for line:=1 to SIZE do In.Line(area[line-1]) end
 
-  mark_antinodes(antinodes1, 1) ; Out.Int(count(antinodes1)); Out.Ln
-  mark_antinodes(antinodes2, 2) ; Out.Int(count(antinodes2)); Out.Ln
+  mark_antinodes(antinodes1, method1) ; Out.Int(count(antinodes1)); Out.Ln
+  mark_antinodes(antinodes2, method2) ; Out.Int(count(antinodes2)); Out.Ln
 end Day08.
