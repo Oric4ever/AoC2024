@@ -1,0 +1,85 @@
+program Day08
+import In,Out
+const SIZE = 50
+type AntinodeMap = array SIZE,SIZE of boolean
+var area: array SIZE,SIZE+1 of char
+
+procedure mark(var map: AntinodeMap; x,y: integer)
+begin
+  if (x >= 0) and (x<SIZE) and (y >= 0) and (y<SIZE) then map[y][x] := true end
+end mark
+  
+function gcd(a,b: integer):integer
+  return if a > b then gcd(a-b,b) else (if a < b then gcd(a,b-a) else a)
+end gcd
+
+procedure method1(var map: AntinodeMap; x1,y1,x2,y2: integer)
+begin
+  mark(map, x1 + 2*(x2-x1), y1 + 2*(y2-y1))
+  mark(map, x2 - 2*(x2-x1), y2 - 2*(y2-y1))
+end method1
+
+procedure method2(var map: AntinodeMap; x1,y1,x2,y2: integer)
+  var n : integer
+begin
+  let divisor = if (x2=x1) or (y2=y1) then 1 else gcd(abs(x2-x1), abs(y2-y1))
+  let dx = (x2-x1) div divisor
+  let dy = (y2-y1) div divisor
+  var x := x1
+  var y := y1
+  while (x>=0) and (x<SIZE) and (y>=0) and (y<SIZE) do
+    mark(map, x, y)
+    inc(x,dx)
+    inc(y,dy)
+  end
+  x := x1
+  y := y1
+  while (x>=0) and (x<SIZE) and (y>=0) and (y<SIZE) do
+    mark(map, x, y)
+    dec(x,dx)
+    dec(y,dy)
+  end
+end method2
+
+procedure mark_antinodes(var map: AntinodeMap; method: integer)
+  var x1,y1,x2,y2: integer
+begin
+  for y1 := 0 to SIZE-1 do
+    for x1 := 0 to SIZE-1 do
+      let frequency = area[y1][x1]
+      if frequency # "." then
+        y2 := y1 ; x2 := x1 +1
+        while y2 < SIZE do
+          while x2 < SIZE do
+            if area[y2][x2] = frequency then
+              if method = 1 then method1(map,x1,y1,x2,y2) else method2(map,x1,y1,x2,y2) end
+            end
+            inc(x2)
+          end
+          x2 := 0 ; inc(y2)
+        end
+      end
+    end
+  end
+end mark_antinodes
+
+function count(map: AntinodeMap): integer
+  var x,y: integer
+begin
+  var count := 0
+  for y := 0 to SIZE-1 do
+    for x := 0 to SIZE-1 do
+      if map[y][x] then inc(count) end
+    end
+  end
+  return count
+end count
+
+  var line: integer
+      antinodes1, antinodes2: AntinodeMap
+begin
+  for line:=1 to SIZE do In.Line(area[line-1]) end
+
+  mark_antinodes(antinodes1, 1) ; Out.Int(count(antinodes1)); Out.Ln
+  mark_antinodes(antinodes2, 2) ; Out.Int(count(antinodes2)); Out.Ln
+end Day08.
