@@ -1,0 +1,94 @@
+program Day09b
+import In, Out
+const NB_FILES =  10000
+      DISK_SIZE= 100000
+      EMPTY    =     -1
+type Checksum = 64 bits integer
+var map  : array DISK_SIZE+1 of integer
+    sizes, locations: array NB_FILES+1 of integer
+
+procedure read_disk
+  procedure store_file(var pos: integer; length, index : integer)
+    var i: integer
+  begin
+    locations[index] := pos
+    sizes    [index] := length
+    for i := 0 to length-1 do map[pos+i] := index end
+    inc(pos, length)
+  end store_file
+    
+  var i, n  : integer
+      digit : char
+begin
+  for i := 0 to DISK_SIZE do map[i] := EMPTY end
+
+  var pos := 0
+  In.Char(digit)
+  store_file(pos, ord(digit)-ord("0"), 0)
+
+  for i := 1 to NB_FILES-1 do
+    In.Char(digit)
+    inc(pos, ord(digit)-ord("0"))
+    In.Char(digit)
+    store_file(pos, ord(digit)-ord("0"), i)
+  end
+end read_disk
+
+function find_free(blocks: integer): integer
+  procedure next_free(var pos, length: integer)
+  begin
+    while map[pos] # EMPTY do inc(pos) end
+    length := 0
+    while (pos+length < DISK_SIZE) and (map[pos+length] = EMPTY) do inc(length) end
+  end next_free
+
+  var length: integer
+begin
+  var pos := 0
+  next_free(pos, length)
+  while length < blocks do
+    inc(pos, length)
+    next_free(pos, length)
+  end
+  return pos
+end find_free
+
+procedure move_file(index, dst: integer)
+  var i : integer
+begin
+  let src    = locations[index]
+  let length = sizes    [index]
+  for i := 0 to length-1 do
+    map[src + i] := EMPTY
+    map[dst + i] := index
+  end
+end move_file
+
+procedure compact_disk
+  var i, free_pos: integer
+begin
+  for i := NB_FILES-1 to 0 by -1 do
+    free_pos := find_free(sizes[i])
+    if free_pos < locations[i] then move_file(i, free_pos) end
+  end
+end compact_disk
+
+var sum : Checksum
+procedure print_checksum
+  var pos: integer
+begin
+  for pos := 0 to DISK_SIZE do
+    if map[pos] # EMPTY then
+      sum := sum + Checksum(pos*map[pos])
+    end
+  end
+  Out.Int(integer(sum div 1000000000))
+  Out.Int(integer(sum mod 1000000000))
+  Out.Ln
+end print_checksum
+
+begin
+  read_disk
+  compact_disk
+  print_checksum
+end Day09b.

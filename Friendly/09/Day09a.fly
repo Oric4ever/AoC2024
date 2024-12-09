@@ -1,0 +1,60 @@
+program Day09a
+import In, Out
+const NB_FILES =  10000
+      DISK_SIZE= 100000
+      EMPTY    =     -1
+type Checksum = 64 bits integer
+var map: array DISK_SIZE+1 of integer
+
+procedure read_disk
+  var i, n  : integer
+      digit : char
+begin
+  for i := 0 to DISK_SIZE do map[i] := EMPTY end
+
+  var pos := 0
+  for i := 0 to NB_FILES-2 do
+    In.Char(digit)
+    for n := 1 to ord(digit)-ord("0") do map[pos] := i ; inc(pos) end
+    In.Char(digit)
+    inc(pos, ord(digit)-ord("0"))
+  end
+  In.Char(digit)
+  for n := 1 to ord(digit)-ord("0") do map[pos] := NB_FILES-1 ; inc(pos) end
+end read_disk
+
+procedure compact_disk
+begin
+  var first_free := 0
+  var last_busy  := DISK_SIZE-1
+  repeat
+    while map[first_free] # EMPTY do inc(first_free) end
+    while (last_busy >= 0) and (map[last_busy ] = EMPTY) do dec(last_busy ) end
+    if first_free < last_busy then
+      map[first_free] := map[last_busy]
+      map[last_busy ] := EMPTY
+      inc(first_free)
+      dec(last_busy)
+    end
+  until first_free > last_busy
+end compact_disk
+
+var sum : Checksum
+procedure print_checksum
+begin
+  var pos := 0
+  sum := 0
+  while map[pos] # EMPTY do
+    sum := sum + Checksum(pos*map[pos])
+    inc(pos)
+  end
+  Out.Int(integer(sum div 1000000000))
+  Out.Int(integer(sum mod 1000000000))
+  Out.Ln
+end print_checksum
+
+begin
+  read_disk
+  compact_disk
+  print_checksum
+end Day09a.
