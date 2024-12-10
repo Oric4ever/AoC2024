@@ -1,0 +1,53 @@
+program Day10
+import In,Out
+const SIZE = 59
+type Position = record x,y: integer end
+var map: array SIZE,SIZE+1 of char
+    sum, ratings_sum: integer
+
+var trails_end: array 20 of Position
+    nb_trails : integer
+
+procedure count_trails(x,y: integer; next: integer)
+  procedure add_position(x,y: integer)
+    var i : integer
+  begin
+    inc(ratings_sum)
+    var already_in := false
+    for i := 0 to nb_trails-1 do
+      if (trails_end[i].x = x) and (trails_end[i].y = y) then already_in := true end
+    end
+    if not already_in then
+      trails_end[nb_trails].x := x
+      trails_end[nb_trails].y := y
+      inc(nb_trails)
+    end
+  end add_position
+begin
+  if next > ord("9") then
+    add_position(x,y)
+  else
+    if (x > 0     ) and (ord(map[y][x-1]) = next) then count_trails(x-1,y,next+1) end
+    if (x < SIZE-1) and (ord(map[y][x+1]) = next) then count_trails(x+1,y,next+1) end
+    if (y > 0     ) and (ord(map[y-1][x]) = next) then count_trails(x,y-1,next+1) end
+    if (y < SIZE-1) and (ord(map[y+1][x]) = next) then count_trails(x,y+1,next+1) end
+  end
+end count_trails
+
+
+  var x,y : integer
+begin
+  for y := 1 to SIZE do In.Line(map[y-1]) end
+
+  for y := 0 to SIZE-1 do
+    for x := 0 to SIZE-1 do
+      if map[y][x] = "0" then
+        nb_trails := 0
+        count_trails(x,y,ord("1"))
+        inc(sum, nb_trails)
+      end
+    end
+  end
+  Out.Int(sum); Out.Ln
+  Out.Int(ratings_sum); Out.Ln
+end Day10.
