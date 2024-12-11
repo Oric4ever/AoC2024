@@ -1,0 +1,130 @@
+program Day11
+import In, Out, Strings
+const NB_STONES = 8
+      NB_BLINKS = 75
+type Digit =  8 bits integer
+type Count = 64 bits integer
+type Stone = array 100 of Digit
+var stone0, stone1, stone : Stone
+    mem : array 10,NB_BLINKS+1 of Count
+
+procedure mul2024(var stone: Stone)
+  procedure add_shifted(var stone: Stone; value: Stone; shift:integer)
+    var i: integer
+  begin
+    var carry := false
+    for i := shift to high(stone) do
+      let digit = stone[i] + value[i-shift] + ord(carry)
+      carry    := digit > 9
+      stone[i] := if carry then Digit(digit-10) else Digit(digit)
+    end
+    assert( not carry )
+  end add_shifted
+
+  var tmp : Stone
+begin
+  tmp := stone
+  add_shifted(stone, tmp, 0) (* => x2 in stone *)
+  tmp := stone
+  add_shifted(stone, tmp, 0) (* => x4 in stone, x2 in tmp *)
+  add_shifted(stone, tmp, 1) (* => x24 in stone *)
+  add_shifted(stone, tmp, 3) (* => x2024 in stone *)
+end mul2024
+
+function nb_digits(stone: Stone): integer
+begin
+  var i := high(stone)
+  while (i > 0) and (stone[i] = 0) do dec(i) end
+  return i+1
+end nb_digits
+
+function is_zero(stone: Stone): boolean
+  var i : integer
+begin
+  var zero := true
+  for i := 0 to high(stone) do
+    if stone[i] # 0 then zero := false end
+  end
+  return zero
+end is_zero
+
+procedure split(stone: Stone; var left,right: Stone)
+  var i: integer
+begin
+  let half = nb_digits(stone) div 2
+  left  := stone0
+  right := stone0
+  for i := 0 to half-1 do
+    left [i] := stone[i+half]
+    right[i] := stone[i]
+  end
+end split
+
+procedure InitTable
+  var nb_blinks, digit, n: integer
+begin
+  for digit := 0 to 9 do
+    mem[digit][0] := 1
+    mem[digit][1] := 1 (* digit multiplied by 2024 *)
+  end
+  mem[0][2] := 1
+  for digit := 1 to 4 do mem[digit][2] := 2 end (* 4 digits split in two *)
+  for digit := 5 to 9 do
+    mem[digit][2] := 1 (* 5 digits again multiplied by 2024 *)
+    mem[digit][3] := 2 (* split in two *)
+    mem[digit][4] := 4 (* and split again *)
+  end
+  mem[8][5] := 7 (* 32772608 splits in 2 then 4 then 7 *)
+
+  for n := 3 to NB_BLINKS do
+    mem[0][n] := mem[1][n-1]
+    mem[1][n] := mem[2][n-3] + mem[0][n-3] + mem[2][n-3] + mem[4][n-3] (* 2024 *)
+    mem[2][n] := mem[4][n-3] + mem[0][n-3] + mem[4][n-3] + mem[8][n-3] (* 4048 *)
+    mem[3][n] := mem[6][n-3] + mem[0][n-3] + mem[7][n-3] + mem[2][n-3] (* 6072 *)
+    mem[4][n] := mem[8][n-3] + mem[0][n-3] + mem[9][n-3] + mem[6][n-3] (* 8096 *)
+    if n >= 5 then
+     mem[5][n]:= 2*mem[2][n-5] + 2*mem[0][n-5] + mem[4][n-5] + 3*mem[8][n-5] (* 20482880 *)
+     mem[6][n]:= 2*mem[4][n-5] + 2*mem[5][n-5] + mem[2][n-5] + mem[6][n-5] + mem[7][n-5] + mem[9][n-5](* 24579456 *)
+     mem[7][n]:= 2*mem[2][n-5] + 2*mem[6][n-5] + mem[0][n-5] + mem[3][n-5] + mem[7][n-5] + mem[8][n-5](* 28676032 *)
+     mem[8][n]:= 2*mem[2][n-5] + 2*mem[7][n-5] + mem[3][n-5] + mem[6][n-5] + mem[8][n-4] (* 32772608 *)
+     mem[9][n]:= 2*mem[6][n-5] + 2*mem[8][n-5] + mem[1][n-5] + mem[3][n-5] + mem[4][n-5] + mem[9][n-5](* 36869184 *)
+    end
+  end
+end InitTable
+  
+function blinks(stone: Stone; nb_blinks: integer): Count
+  var left, right, x2024: Stone
+begin
+  var nb_stones := Count(1)
+  if nb_blinks > 0 then
+    if nb_digits(stone) = 1 then
+      nb_stones := mem[stone[0]][nb_blinks]
+    elsif not odd(nb_digits(stone)) then
+      split(stone, left, right)
+      nb_stones := blinks(left, nb_blinks-1) + blinks(right, nb_blinks-1)
+    else
+      x2024 := stone
+      mul2024(x2024)
+      nb_stones := blinks(x2024, nb_blinks-1)
+    end
+  end
+  return nb_stones
+end blinks
+
+  var i,n  : integer
+      str  : array 10 of char
+      total: Count
+begin
+  InitTable
+  stone1[0] := Digit(1)
+
+  for n := 1 to NB_STONES do 
+    In.String(str, " ")
+    let length = Strings.Length(str)
+    stone := stone0
+    for i := 1 to length do stone[length-i] := Digit(ord(str[i-1]) - ord("0")) end
+
+    inc(total, blinks(stone, NB_BLINKS))
+  end 
+  Out.Long(total); Out.Ln
+end Day11.
