@@ -1,0 +1,17 @@
+program Day12
+import Area,Out
+  
+var y, x, sum1, sum2, surface, perimeter, sides: integer
+begin
+  for y := 0 to Area.SIZE-1 do
+    for x := 0 to Area.SIZE-1 do
+      if ord(Area.map[y][x]) # 0 then
+        Area.Fence(x,y,surface,perimeter,sides)
+        inc(sum1, surface * perimeter)
+        inc(sum2, surface * sides)
+      end
+    end
+  end
+  Out.Int(sum1); Out.Ln
+  Out.Int(sum2); Out.Ln
+end Day12.

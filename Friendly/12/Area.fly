@@ -1,0 +1,133 @@
+module Area
+import In,Out
+const SIZE* = 140
+      MAX_AREA = 10000
+      NORTH = 0
+      SOUTH = 1
+      WEST  = 2
+      EAST  = 3
+type Area     = array SIZE,SIZE+1 of char
+type Position = record x,y: integer end
+type List     = record
+                  length: integer
+                  pos   : array MAX_AREA of Position
+                end
+type Order    = function(pos1,pos2:Position):boolean
+var map* : Area
+var region  : List
+    fences  : array 4 of List
+
+function inList(list: List; x,y: integer):boolean
+begin
+  var i := 0
+  while (i < list.length) and ((list.pos[i].x # x) or (list.pos[i].y # y)) do inc(i) end
+  return i < list.length
+end inList
+
+procedure addToList(var list: List; x,y: integer)
+begin
+  list.pos[list.length].x := x
+  list.pos[list.length].y := y
+  inc(list.length)
+end addToList
+  
+procedure FindRegion(x,y: integer)
+begin
+  let plant = map[y][x]
+  if not inList(region,x,y) then
+    addToList(region,x,y)
+    if (x > 0     ) and (map[y][x-1] = plant) then FindRegion(x-1,y) end
+    if (x < SIZE-1) and (map[y][x+1] = plant) then FindRegion(x+1,y) end
+    if (y > 0     ) and (map[y-1][x] = plant) then FindRegion(x,y-1) end
+    if (y < SIZE-1) and (map[y+1][x] = plant) then FindRegion(x,y+1) end
+  end
+end FindRegion
+
+function vertical_less(pos1, pos2: Position): boolean
+  return (pos1.x < pos2.x) or (pos1.x = pos2.x) and (pos1.y < pos2.y)
+end vertical_less
+
+function horizontal_less(pos1, pos2: Position): boolean
+  return (pos1.y < pos2.y) or (pos1.y = pos2.y) and (pos1.x < pos2.x)
+end horizontal_less
+
+function less(pos1, pos2: Position; vertical: boolean):boolean
+begin
+  return if vertical then vertical_less(pos1,pos2) else horizontal_less(pos1,pos2)
+end less
+
+function indexOfSmallestFrom(list: List; startIndex: integer; vertical: boolean): integer 
+var i, indexOfSmallest: integer
+begin
+  indexOfSmallest := startIndex
+  for i:=startIndex to list.length-1 do
+    if less(list.pos[i], list.pos[indexOfSmallest], vertical) then indexOfSmallest := i end
+  end
+  return indexOfSmallest
+end indexOfSmallestFrom
+
+procedure Sort(var list: List; vertical: boolean)
+  var i: integer
+      tmp: Position
+begin
+  for i:=0 to list.length-1 do
+    let j = indexOfSmallestFrom(list, i, vertical)
+    tmp := list.pos[i] ; list.pos[i] := list.pos[j] ; list.pos[j] := tmp
+  end
+end Sort
+
+function CountSides(list: List; vertical: boolean):integer
+  var i: integer
+begin
+  var sides := 1
+  for i := 1 to list.length-1 do
+    if vertical
+    then if (list.pos[i].x # list.pos[i-1].x) or (list.pos[i].y # list.pos[i-1].y + 1) then inc(sides) end
+    else if (list.pos[i].y # list.pos[i-1].y) or (list.pos[i].x # list.pos[i-1].x + 1) then inc(sides) end
+    end
+  end
+  return sides
+end CountSides
+
+procedure ClearRegion
+  var i: integer
+begin
+  for i := 0 to region.length-1 do map[region.pos[i].y][region.pos[i].x] := 0X end
+end ClearRegion
+
+(* caution: Fence clears the plants of the region *)
+procedure Fence*(x0,y0: integer; var area,perimeter,sides: integer)
+  var i,x,y: integer
+begin
+  region.length  := 0
+  let plant = map[y0][x0]
+  FindRegion(x0,y0)
+  area := region.length
+
+  for i := 0 to 3 do fences[i].length := 0 end
+
+  for i := 0 to region.length-1 do
+    x := region.pos[i].x
+    y := region.pos[i].y
+    if (x = 0     ) or (map[y][x-1] # plant) then addToList(fences[WEST ],x,y) end
+    if (x = SIZE-1) or (map[y][x+1] # plant) then addToList(fences[EAST ],x,y) end
+    if (y = 0     ) or (map[y-1][x] # plant) then addToList(fences[NORTH],x,y) end
+    if (y = SIZE-1) or (map[y+1][x] # plant) then addToList(fences[SOUTH],x,y) end
+  end
+  
+  perimeter := 0
+  sides     := 0
+  for i := 0 to 3 do
+    let vertical = i in {EAST, WEST}
+    inc(perimeter, fences[i].length)
+    Sort(fences[i], vertical)
+    inc(sides, CountSides(fences[i], vertical))
+  end
+  
+  ClearRegion
+end Fence
+  
+  var i : integer
+begin
+  for i := 0 to high(map) do In.Line(map[i]) end
+end Area.
