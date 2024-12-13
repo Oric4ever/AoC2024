@@ -1,0 +1,105 @@
+program Day13b
+import In,Out
+const NB_MAC = 320
+type Int64   = 64 bits integer
+type Machine =  record
+                  buttonA_dx, buttonA_dy, buttonB_dx, buttonB_dy, prizeX, prizeY: integer
+                end
+
+function gcd(a,b: Int64):Int64
+  return if a = b then a else (if a < b then gcd(b-a, a) else gcd(a-b, b))
+end gcd
+
+procedure read_machine(var m: Machine)
+  var i   : integer
+      word: array 16 of char
+      ch  : char
+begin
+  In.String(word,"+"); In.Int(m.buttonA_dx); In.String(word,"+"); In.Int(m.buttonA_dy)
+  In.String(word,"+"); In.Int(m.buttonB_dx); In.String(word,"+"); In.Int(m.buttonB_dy)
+  In.String(word,"="); In.Int(m.prizeX);     In.String(word,"="); In.Int(m.prizeY)
+end read_machine
+
+function try_to_win(m: Machine): Int64
+  var nb_A, nb_B, remainX, remainY, increment, increments: Int64
+begin
+  let a_dx   = Int64(m.buttonA_dx)
+  let a_dy   = Int64(m.buttonA_dy)
+  let b_dx   = Int64(m.buttonB_dx)
+  let b_dy   = Int64(m.buttonB_dy)
+  let gcdX   = Int64(gcd(a_dx, b_dx))
+  let gcdY   = Int64(gcd(a_dy, b_dy))
+  let prizeX = Int64(10000000) * Int64(1000000) + Int64(m.prizeX)
+  let prizeY = Int64(10000000) * Int64(1000000) + Int64(m.prizeY)
+
+  var cost := Int64(0)
+  if (prizeX mod gcdX = 0) and (prizeY mod gcdY = 0) then (* a solution may exist ? *)
+
+    (* searching extreme solution for X: try to have a max of B buttons (because they are cheaper) *)
+    nb_B    := prizeX div b_dx
+    remainX := prizeX mod b_dx
+    while remainX mod a_dx # 0 do
+      dec(nb_B)
+      inc(remainX, b_dx)
+    end
+    nb_A := remainX div a_dx
+    assert( prizeX = nb_A*a_dx + nb_B*b_dx )  (* equation X solved *)
+
+    remainY   := prizeY - nb_A*a_dy - nb_B*b_dy
+    increment := (b_dx div gcdX)*a_dy - (a_dx div gcdX)*b_dy
+
+    if remainY = 0 then (* Y already reached too : there must be plenty of solutions *)
+      assert( increment = 0 ) (* TODO *)
+    else
+      let negative_increment = (increment < 0)
+      if negative_increment then increment := -increment; remainY := -remainY end
+  
+      assert( increment # 0 ) (* TODO *)
+      if remainY mod increment = 0 then
+      
+        increments := remainY div increment
+        inc(nb_A, (b_dx div gcdX)*increments)
+        dec(nb_B, (a_dx div gcdX)*increments)
+  
+        assert( prizeX = nb_A*a_dx + nb_B*b_dx )  (* equation X still solved *)
+        assert( prizeY = nb_A*a_dy + nb_B*b_dy )  (* equation Y now solved too *)
+        cost := nb_A*3 + nb_B
+  
+        (* searching other extreme solution for X: try to have a max of A buttons (maybe pressing A advances much faster than pressing B ?) *)
+        nb_A    := prizeX div a_dx
+        remainX := prizeX mod a_dx
+        while remainX mod b_dx # 0 do
+          dec(nb_A)
+          inc(remainX, a_dx)
+        end
+        nb_B := remainX div b_dx
+        assert( prizeX = nb_A*a_dx + nb_B*b_dx )  (* equation X solved *)
+  
+        remainY := prizeY - nb_A*a_dy - nb_B*b_dy
+        if negative_increment then remainY := -remainY end
+
+        if remainY mod increment = 0 then
+          increments := remainY div increment
+          dec(nb_A, (b_dx div gcdX)*increments)
+          inc(nb_B, (a_dx div gcdX)*increments)
+    
+          assert( prizeX = nb_A*a_dx + nb_B*b_dx )  (* equation X still solved *)
+          assert( prizeY = nb_A*a_dy + nb_B*b_dy )  (* equation Y now solved too *)
+          if nb_A*3 + nb_B < cost then cost := nb_A*3 + nb_B end
+        end
+      end
+    end
+  end
+  return cost
+end try_to_win
+  
+var machine: Machine
+    i      : integer
+    sum    : Int64
+begin
+  for i := 1 to NB_MAC do
+    read_machine(machine)
+    inc(sum, try_to_win(machine))
+  end
+  Out.Long(sum); Out.Ln
+end Day13b.

@@ -1,0 +1,48 @@
+program Day13a
+import In,Out
+const NB_MAC = 320
+type Machine =  record
+                  buttonA_dx, buttonA_dy, buttonB_dx, buttonB_dy, prizeX, prizeY: integer
+                end
+
+procedure read_machine(var m: Machine)
+  var i   : integer
+      word: array 16 of char
+      ch  : char
+begin
+  In.String(word,"+"); In.Int(m.buttonA_dx); In.String(word,"+"); In.Int(m.buttonA_dy)
+  In.String(word,"+"); In.Int(m.buttonB_dx); In.String(word,"+"); In.Int(m.buttonB_dy)
+  In.String(word,"="); In.Int(m.prizeX);     In.String(word,"="); In.Int(m.prizeY)
+end read_machine
+
+function min(a,b: integer):integer; return if a<b then a else b; end min
+
+function try_to_win(m: Machine): integer
+  const MAX = 101*3 + 101
+  var nb_A: integer
+begin
+  var cheapest := MAX
+  var bestA := 101
+  var bestB := 101
+  for nb_A := 0 to 100 do
+    let remainX = m.prizeX - m.buttonA_dx * nb_A
+    let remainY = m.prizeY - m.buttonA_dy * nb_A
+    if (remainX >= 0) and (remainY >= 0) then
+      let nb_B = remainX div m.buttonB_dx
+      if (nb_B <= 100) and (remainX = nb_B * m.buttonB_dx) and (remainY = nb_B * m.buttonB_dy) then
+        cheapest := min(cheapest, 3*nb_A + nb_B)
+      end
+    end
+  end
+  return if cheapest < MAX then cheapest else 0
+end try_to_win
+  
+var machine: Machine
+    i, sum : integer
+begin
+  for i := 1 to NB_MAC do
+    read_machine(machine)
+    inc(sum, try_to_win(machine))
+  end
+  Out.Int(sum); Out.Ln
+end Day13a.
