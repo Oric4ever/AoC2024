@@ -1,0 +1,48 @@
+program Day14a
+import In,Out
+const ROBOTS = 500
+      WIDTH  = 101
+      HEIGHT = 103
+      SECONDS= 100
+type Robot = record
+               px,py,vx,vy: integer
+             end
+var map: array HEIGHT,WIDTH of integer
+
+procedure read_robot(var r: Robot)
+  var buf: array 8 of char
+begin
+  In.String(buf, "="); In.Int(r.px)
+  In.String(buf, ","); In.Int(r.py)
+  In.String(buf, "="); In.Int(r.vx)
+  In.String(buf, ","); In.Int(r.vy)
+end read_robot
+
+procedure robot_quadrant(var r: Robot): integer
+  var i: integer
+begin
+  for i := 1 to SECONDS do
+    inc(r.px, r.vx)
+    inc(r.py, r.vy)
+    r.px := (r.px + WIDTH ) mod WIDTH
+    r.py := (r.py + HEIGHT) mod HEIGHT
+  end
+  var quadrant := 0
+  if (r.px < WIDTH div 2) and (r.py < HEIGHT div 2) then quadrant := 1 end
+  if (r.px < WIDTH div 2) and (r.py > HEIGHT div 2) then quadrant := 2 end
+  if (r.px > WIDTH div 2) and (r.py < HEIGHT div 2) then quadrant := 3 end
+  if (r.px > WIDTH div 2) and (r.py > HEIGHT div 2) then quadrant := 4 end
+  return quadrant
+end robot_quadrant
+
+var counts: array 4+1 of integer
+    i : integer
+    r : Robot
+begin
+  for i := 1 to ROBOTS do
+    read_robot(r)
+    inc(counts[robot_quadrant(r)])
+  end
+  for i := 0 to 4 do Out.Int(counts[i]); Out.Ln end
+  Out.Int(counts[1]*counts[2]*counts[3]*counts[4]); Out.Ln
+end Day14a.

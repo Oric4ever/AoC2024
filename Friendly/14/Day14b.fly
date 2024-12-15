@@ -1,0 +1,72 @@
+program Day14b
+import In,Out,Strings
+const ROBOTS = 500
+      WIDTH  = 101
+      HEIGHT = 103
+      SECONDS= 100
+type Robot = record
+               px,py,vx,vy: integer
+             end
+var map   : array HEIGHT,WIDTH+1 of char
+    robots: array ROBOTS of Robot
+
+procedure read_robot(var r: Robot)
+  var buf: array 8 of char
+begin
+  In.String(buf, "="); In.Int(r.px)
+  In.String(buf, ","); In.Int(r.py)
+  In.String(buf, "="); In.Int(r.vx)
+  In.String(buf, ","); In.Int(r.vy)
+end read_robot
+
+procedure move_robots
+  var i: integer
+begin
+  for i := 0 to high(robots) do
+    inc(robots[i].px, robots[i].vx)
+    inc(robots[i].py, robots[i].vy)
+    robots[i].px := (robots[i].px + WIDTH ) mod WIDTH
+    robots[i].py := (robots[i].py + HEIGHT) mod HEIGHT
+  end
+end move_robots
+
+function is_xmas_tree(): boolean
+  var i: integer
+  var counts: array 4+1 of integer
+begin
+  var aligned := false
+  for i := 0 to high(map) do
+    aligned := aligned or (Strings.Pos("XXXXXXXXXX", map[i], 0) # -1)
+  end 
+  return aligned
+end is_xmas_tree
+
+procedure build_map
+  var i,j: integer
+begin
+  for j := 0 to HEIGHT-1 do
+    for i := 0 to WIDTH-1 do map[j][i] := "." end
+  end
+
+  for i := 0 to high(robots) do map[robots[i].py][robots[i].px] := "X" end
+end build_map
+
+procedure show_map
+  var j: integer
+begin
+  for j := 0 to high(map) do Out.Line(map[j]) end
+end show_map
+
+var i,n : integer
+begin
+  for i := 0 to high(robots) do read_robot(robots[i]) end
+
+  for i := 1 to 10403 do
+    move_robots
+    build_map
+    if is_xmas_tree() then
+      show_map
+      Out.Int(i); Out.Ln
+    end
+  end
+end Day14b.
