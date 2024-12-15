@@ -1,0 +1,77 @@
+program Day15a
+import In,Out
+const MAPSIZE = 50
+      NORTH = 0
+      WEST  = 1
+      SOUTH = 2
+      EAST  = 3
+var map: array MAPSIZE,MAPSIZE of char
+    dx, dy : array 4 of integer
+var i,x,y: integer
+
+
+function can_push(x,y,dir: integer):boolean
+begin
+  return (map[y][x] = ".") or (map[y][x] = "O") and can_push(x+dx[dir], y+dy[dir], dir)
+end can_push
+
+procedure push(dir: integer)
+begin
+  var n := 2
+  while map[y+n*dy[dir]][x+n*dx[dir]] # "." do inc(n) end
+  map[y+n*dy[dir]][x+n*dx[dir]] := "O"
+  map[y+1*dy[dir]][x+1*dx[dir]] := "."
+end push
+
+procedure move(dir: integer)
+begin
+  if map[y+dy[dir]][x+dx[dir]] = "."      then            inc(x, dx[dir]); inc(y, dy[dir])
+  elsif can_push(x+dx[dir],y+dy[dir],dir) then push(dir); inc(x, dx[dir]); inc(y, dy[dir])
+  end
+end move
+
+procedure init
+  var line, col: integer
+begin
+  for line := 0 to high(map) do In.Line(map[line]) end
+  In.SkipLine
+  dx[NORTH] :=  0 ; dx[WEST] := -1 ; dx[SOUTH] :=  0 ; dx[EAST] := +1
+  dy[NORTH] := -1 ; dy[WEST] :=  0 ; dy[SOUTH] := +1 ; dy[EAST] :=  0
+  for line := 1 to MAPSIZE-2 do
+    for col := 1 to MAPSIZE-2 do
+      if map[line][col] = "@" then x := col; y := line end
+    end
+  end
+  map[y][x] := "."
+end init
+
+function count(): integer
+  var x,y: integer
+begin
+  var sum := 0
+  for y := 1 to high(map)-1 do
+    for x := 1 to MAPSIZE-1 do
+      if map[y][x] = "O" then inc(sum, 100*y+x) end
+    end
+  end
+  return sum
+end count
+
+  var line: array 1024 of char
+begin
+  init
+  In.Line(line)
+  while line # "" do
+    for i := 0 to high(line) do
+      let dir = line[i]
+      case dir of
+>     | "^" : move(NORTH)
+>     | "v" : move(SOUTH)
+>     | "<" : move(WEST)
+>     | ">" : move(EAST)
+>     end
+    end
+    In.Line(line)
+  end
+  Out.Int(count()); Out.Ln
+end Day15a.

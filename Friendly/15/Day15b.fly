@@ -1,0 +1,132 @@
+program Day15b
+import In,Out
+const MAPSIZE = 50
+      NORTH = 0
+      WEST  = 1
+      SOUTH = 2
+      EAST  = 3
+var map: array MAPSIZE,2*MAPSIZE of char
+var x,y: integer
+
+function is_box(x,y: integer):boolean
+  return (map[y][x] = "[") or (map[y][x] = "]")
+end is_box
+
+function can_push_horiz(x,y,dx: integer):boolean
+  return (map[y][x] = ".") or is_box(x,y) and can_push_horiz(x+dx, y, dx)
+end can_push_horiz
+
+procedure push_horiz(dx: integer)
+  var pushed: char
+begin
+  pushed := "."
+  var n := 1
+  repeat
+    swap pushed and map[y][x+n*dx]
+    inc(n)
+  until pushed = "."
+end push_horiz
+
+procedure move_horiz(dx: integer)
+begin
+  if map[y][x+dx] = "."           then                 inc(x, dx)
+  elsif can_push_horiz(x+dx,y,dx) then push_horiz(dx); inc(x, dx)
+  end
+end move_horiz
+
+function can_push_verti(x,y,dy: integer):boolean
+begin
+  var possible := false
+  let pushed = map[y][x]
+  case pushed of
+> | "." : possible := true
+> | "#" : possible := false
+> | "[" : possible := can_push_verti(x,y+dy,dy) and can_push_verti(x+1,y+dy,dy)
+> | "]" : possible := can_push_verti(x,y+dy,dy) and can_push_verti(x-1,y+dy,dy)
+> end
+  return possible
+end can_push_verti
+
+procedure push_verti(x,y,dy: integer)
+begin
+  let pushed = map[y][x]
+  case pushed of
+> | "[" : push_verti(x  ,y+dy,dy); map[y+dy][x  ] := "["; map[y][x  ] := ".";
+>         push_verti(x+1,y+dy,dy); map[y+dy][x+1] := "]"; map[y][x+1] := "."
+> | "]" : push_verti(x  ,y+dy,dy); map[y+dy][x  ] := "]"; map[y][x  ] := ".";
+>         push_verti(x-1,y+dy,dy); map[y+dy][x-1] := "["; map[y][x-1] := "."
+> end
+end push_verti
+  
+procedure move_verti(dy: integer)
+begin
+  if map[y+dy][x] = "."           then                        inc(y, dy)
+  elsif can_push_verti(x,y+dy,dy) then push_verti(x,y+dy,dy); inc(y, dy)
+  end
+end move_verti
+
+procedure init
+  var line, col: integer
+      ch       : char
+begin
+  for line := 0 to high(map) do
+    for col := 0 to MAPSIZE-1 do
+      In.Char(ch)
+      case ch of 
+>     | "#": map[line][col*2] := "#"; map[line][col*2+1] := "#"
+>     | ".": map[line][col*2] := "."; map[line][col*2+1] := "."
+>     | "O": map[line][col*2] := "["; map[line][col*2+1] := "]"
+>     | "@": map[line][col*2] := "."; map[line][col*2+1] := "."; y := line; x := col*2
+>     end
+    end
+    In.SkipLine
+  end
+  In.SkipLine
+end init
+
+function count(): integer
+  var x,y: integer
+begin
+  var sum := 0
+  for y := 1 to high(map)-1 do
+    for x := 1 to 2*MAPSIZE-1 do
+      if map[y][x] = "[" then inc(sum, 100*y+x) end
+    end
+  end
+  return sum
+end count
+
+extern procedure sleep(n: integer)
+
+procedure print_map
+  const ESC = 01BX
+  var line: integer
+begin
+  Out.Char(ESC); Out.String("[H");
+  for line := 0 to high(map) do
+    Out.Line(map[line])
+  end
+  Out.Char(ESC); Out.Char("["); Out.Int(y+1); Out.Char(";"); Out.Int(x+1); Out.Line("H@");
+  sleep(1)
+end print_map
+
+
+  var line: array 1024 of char
+  var i,n : integer
+begin
+  init
+  In.Line(line)
+  while line # "" do
+    for i := 0 to high(line) do
+      let dir = line[i]
+      case dir of
+>     | "^" : move_verti(-1)
+>     | "v" : move_verti(+1)
+>     | "<" : move_horiz(-1)
+>     | ">" : move_horiz(+1)
+>     end
+    end
+    In.Line(line)
+  end
+  Out.Int(count()); Out.Ln
+end Day15b.
