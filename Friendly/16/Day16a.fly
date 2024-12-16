@@ -1,0 +1,103 @@
+program Day16a
+import In,Out
+const MSIZE = 141
+      QSIZE = 16384
+      EAST  = 0
+      NORTH = 1
+      WEST  = 2
+      SOUTH = 3
+type State = record
+               x,y,dir,score: integer
+             end
+type Queue = record
+               first, last: integer
+               state      : array QSIZE of State
+             end
+var map : array MSIZE,MSIZE of char
+    best: array MSIZE,MSIZE,4 of integer
+    current,next : Queue
+
+function min(a,b: integer):integer; return if a<b then a else b; end min
+
+procedure enqueue(x,y,dir,score: integer; var queue: Queue)
+begin
+  if score < best[y][x][dir] then
+    best[y][x][dir] := score
+    let index = queue.last
+    queue.state[index].x     := x
+    queue.state[index].y     := y
+    queue.state[index].dir   := dir
+    queue.state[index].score := score
+    queue.last := (index + 1) mod QSIZE
+    assert( queue.last # queue.first )
+  end
+end enqueue
+
+procedure dequeue(var x,y,dir,score: integer; var queue: Queue)
+begin
+  assert( queue.last # queue.first )
+  x     := queue.state[queue.first].x
+  y     := queue.state[queue.first].y
+  dir   := queue.state[queue.first].dir
+  score := queue.state[queue.first].score
+  queue.first := (queue.first + 1) mod QSIZE
+end dequeue
+
+function is_empty(queue: Queue):boolean
+  return queue.first = queue.last
+end is_empty
+
+function queue_size(queue: Queue):integer
+  return (queue.last - queue.first) mod QSIZE
+end queue_size
+
+function can_move(x,y,dir: integer):boolean
+  return (dir = EAST)  and (map[y][x+1] # "#")
+>     or (dir = NORTH) and (map[y-1][x] # "#")
+>     or (dir = WEST)  and (map[y][x-1] # "#")
+>     or (dir = SOUTH) and (map[y+1][x] # "#")
+end can_move
+
+procedure move(var x,y: integer; dir: integer)
+begin
+  case dir of
+> | EAST : inc(x)
+> | WEST : dec(x)
+> | NORTH: dec(y)
+> | SOUTH: inc(y)
+> end
+end move
+
+procedure bfs
+  var x,y,dir,score: integer
+begin
+  for y := 0 to MSIZE-1 do
+    for x := 0 to MSIZE-1 do
+      for dir := 0 to 3 do
+        best[y][x][dir] := 999999999
+      end
+    end
+  end
+  enqueue(1, MSIZE-2, EAST, 0, current)
+  assert(map[MSIZE-2][1] = "S")
+
+  while not is_empty(current) or not is_empty(next) do
+    if is_empty(current) then
+      current := next
+      next.first := next.last
+    end
+    dequeue(x,y,dir,score, current)
+    if can_move(x, y, (dir + 1) mod 4) then enqueue(x,y,(dir + 1) mod 4,score+1000, next) end
+    if can_move(x, y, (dir + 3) mod 4) then enqueue(x,y,(dir + 3) mod 4,score+1000, next) end
+    if can_move(x, y, dir)             then move(x,y,dir) ; enqueue(x,y,dir,score+1, current)   end
+  end
+  Out.Int(min(best[1][MSIZE-2][EAST ], best[1][MSIZE-2][NORTH])); Out.Ln
+end bfs
+
+  var i : integer
+begin
+  for i := 0 to high(map) do In.Line(map[i]) end
+
+  bfs
+end Day16a.
+
