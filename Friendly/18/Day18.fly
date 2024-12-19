@@ -1,0 +1,66 @@
+program Day18
+import In,Out
+const CORRUPTED = -1
+var map: array 71+2,71+2 of integer
+    i,j,x,y: integer
+    ch     : char
+
+
+function path_length(): integer
+  var i,j: integer
+begin
+  for i := 1 to 71 do
+    for j := 1 to 71 do
+      if map[j][i] # CORRUPTED then map[j][i] := 999999 end
+    end
+  end
+  map[1][1] := 0
+  var length := 0
+  var continue := true
+  while (map[71][71] # length) and continue do
+    continue := false
+    for i := 1 to 71 do
+      for j := 1 to 71 do
+        if map[j][i] = length then
+          continue := true
+          if length + 1 < map[j+1][i] then map[j+1][i] := length + 1 end
+          if length + 1 < map[j-1][i] then map[j-1][i] := length + 1 end
+          if length + 1 < map[j][i+1] then map[j][i+1] := length + 1 end
+          if length + 1 < map[j][i-1] then map[j][i-1] := length + 1 end
+        end
+      end
+    end
+    inc(length)
+  end
+  return if map[71][71] = length then length else CORRUPTED
+end path_length
+
+procedure init
+begin
+  for i := 1 to 71 do
+    map[0][i] := CORRUPTED
+    map[i][0] := CORRUPTED
+    map[high(map)][i] := CORRUPTED
+    map[i][high(map)] := CORRUPTED
+  end
+
+  for i := 1 to 1024 do
+    In.Int(x)
+    In.Char(ch)
+    In.Int(y)
+    map[y+1][x+1] := CORRUPTED
+  end
+end init
+
+begin
+  init
+  Out.Int(path_length()); Out.Ln
+
+  repeat
+    In.Int(x)
+    In.Char(ch)
+    In.Int(y)
+    map[y+1][x+1] := CORRUPTED
+  until path_length() = CORRUPTED
+  Out.Int(x); Out.Char(","); Out.Int(y); Out.Ln
+end Day18.
