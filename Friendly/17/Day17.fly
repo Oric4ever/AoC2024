@@ -1,0 +1,66 @@
+program Day17
+import In,Out
+
+(*
+Register A: 18427963
+Register B: 0
+Register C: 0
+
+Program: 2,4,1,1,7,5,0,3,4,3,1,6,5,5,3,0
+*)
+type Int64 = 64 bits integer
+type Set64 = 64 bits set
+var myprog, buffer: array 20 of char
+
+procedure exec(var a: Set64): integer
+  var b, c : Set64
+begin
+  (* 0 : 2 4=a *) b := a * Set64({0,1,2})
+  (* 2 : 1 1=1 *) b := b / Set64({0})
+  (* 4 : 7 5=b *) c := a; dec(c, b as Int64) (* c := asr(a, b as integer) *)
+  (* 6 : 0 3=3 *) dec(a, 3)
+  (* 8 : 4 3   *) b := b / c
+  (*10 : 1 6=6 *) b := b / Set64({1,2})
+  return set(b) * {0,1,2} as integer
+end exec
+
+procedure search(index: integer; acc: Set64)
+  var
+    a: Set64
+    expected, try: integer
+begin
+  if index < 0 then
+    Out.Long(acc as Int64)
+    Out.Ln
+  else
+    expected := ord(myprog[index]) - ord("0")
+    for try := 0 to 7 do
+      a := acc
+      inc(a, 3)
+      a := a + Set64(try as set)
+      if exec(a) = expected then
+        a := acc
+        inc(a, 3)
+        search(index-1, a + Set64(try as set))
+      end
+    end
+  end
+end search
+
+
+var init : Int64
+    a    : Set64
+begin
+  (* part 1 *)
+  init := 18427963
+  a    := init as Set64
+  repeat
+    Out.Int(exec(a))
+    if a # Set64({}) then Out.Char(",") end
+  until a = Set64({})
+  Out.Ln
+
+  (* part 2 *)
+  myprog := "2411750343165530"
+  search(15, Set64({}))
+end Day17.
