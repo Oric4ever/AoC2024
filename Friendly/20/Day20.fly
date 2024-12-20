@@ -1,0 +1,82 @@
+program Day20
+import In,Out
+const Size = 141
+var map : array Size,Size of char
+    dist: array Size,Size of integer
+    startX, startY, endX, endY: integer
+
+procedure init_distances
+  var x,y: integer
+begin
+  for y := 0 to high(map) do
+    In.Line(map[y])
+    for x := 0 to Size-1 do
+      dist[y][x] := 999999
+      if map[y][x] = "S" then startX := x ; startY := y end
+      if map[y][x] = "E" then   endX := x ;   endY := y end
+    end
+  end
+
+  dist[endY][endX] := 0
+  var length := 0
+  repeat
+    inc(length)
+    for y := 0 to Size-1 do
+      for x := 0 to Size-1 do
+        if dist[y][x] = length-1 then
+          if (map[y][x+1] # "#") and (length < dist[y][x+1]) then dist[y][x+1] := length end
+          if (map[y][x-1] # "#") and (length < dist[y][x-1]) then dist[y][x-1] := length end
+          if (map[y+1][x] # "#") and (length < dist[y+1][x]) then dist[y+1][x] := length end
+          if (map[y-1][x] # "#") and (length < dist[y-1][x]) then dist[y-1][x] := length end
+        end
+      end
+    end
+  until dist[startY][startX] = length
+end init_distances
+
+function count_2ps_cheats(): integer
+  var x,y: integer
+begin
+  var count := 0
+  for y := 1 to Size-2 do
+    for x := 1 to Size-2 do
+      if dist[y][x] # 999999 then
+        if (x > 1     ) and (dist[y][x-2] # 999999) and (dist[y][x-2] - dist[y][x] > 101) then inc(count) end
+        if (y > 1     ) and (dist[y-2][x] # 999999) and (dist[y-2][x] - dist[y][x] > 101) then inc(count) end
+        if (x < Size-2) and (dist[y][x+2] # 999999) and (dist[y][x+2] - dist[y][x] > 101) then inc(count) end
+        if (y < Size-2) and (dist[y+2][x] # 999999) and (dist[y+2][x] - dist[y][x] > 101) then inc(count) end
+      end
+    end
+  end
+  return count
+end count_2ps_cheats
+
+function count_cheats(steps_through_walls, min_picoseconds: integer): integer
+  var x1,y1,x2,y2: integer
+begin
+  var count := 0
+  for y2 := 1 to Size-2 do
+    for x2 := 1 to Size-2 do
+      if dist[y2][x2] # 999999 then
+        for   y1 := y2-steps_through_walls to y2+steps_through_walls do
+          for x1 := x2-steps_through_walls to x2+steps_through_walls do
+            let d = abs(x2-x1)+abs(y2-y1)
+            if    (d <= steps_through_walls)
+>             and (x1 > 0) and (x1 < Size)
+>             and (y1 > 0) and (y1 < Size)
+>             and (dist[y2][x2] # 999999)
+>             and (dist[y2][x2] - dist[y1][x1] - d >= min_picoseconds)
+>           then inc(count) end
+          end
+        end
+      end
+    end
+  end
+  return count
+end count_cheats
+
+begin
+  init_distances()
+  Out.Int(count_cheats(2, 100)); Out.Ln
+  Out.Int(count_cheats(20, 100)); Out.Ln
+end Day20.
