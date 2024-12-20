@@ -1,0 +1,79 @@
+program Day19
+import In,Out,Strings
+const NB_DESIGNS = 400
+type Pattern = array 20 of char
+     Count   = 64 bits integer
+var  patterns   : array 500 of Pattern
+     lengths    : array 500 of integer
+     nb_patterns: integer
+     memoize    : array 80 of Count
+
+function starts_with(design: array of char; start: integer; pattern: array of char):boolean
+begin
+  var i := 0
+  while (pattern[i] # 0X) and (design[start+i] = pattern[i]) do inc(i) end
+  return pattern[i] = 0X
+end starts_with
+
+procedure read_towels
+var pattern: Pattern
+    length : integer
+    last : boolean
+begin
+  repeat
+    In.String(pattern, " ")
+    length := Strings.Length(pattern)
+    last   := pattern[length-1] # ","
+    if not last then dec(length); pattern[length] := 0X end
+    let n   = nb_patterns + 1
+    nb_patterns := n
+    patterns[n] := pattern
+    lengths [n] := length
+   until last
+end read_towels
+
+function can_be_made(design: array of char; start: integer):boolean
+  var n: integer
+      success : boolean
+begin
+  success := start = 0
+  for n := 1 to nb_patterns while not success do
+    let length = lengths[n]
+    success := (start >= length) and starts_with(design, start-length, patterns[n]) and can_be_made(design, start-length)
+  end
+  return success
+end can_be_made
+
+function nb_solutions(design: array of char; start: integer): Count
+  var n: integer
+      count : Count
+begin
+  count := Count(0)
+  for n := 1 to nb_patterns do
+    if starts_with(design, start, patterns[n]) then inc(count, memoize[start+lengths[n]]) end
+  end
+  return count
+end nb_solutions
+
+  var design  : array 80 of char
+      i, n, count1 : integer
+      count2 : Count
+begin
+  read_towels
+  
+  In.SkipLine
+  for n := 1 to NB_DESIGNS do
+    In.Line(design)
+    if can_be_made(design, Strings.Length(design)) then
+      inc(count1)
+     
+      for i := 0 to high(memoize) do memoize[i] := 0 end
+      memoize[Strings.Length(design)] := 1
+      for i := Strings.Length(design)-1 to 0 by -1 do memoize[i] := nb_solutions(design, i) end
+      inc(count2, memoize[0])
+    end
+  end
+  Out.Int(count1); Out.Ln
+  Out.Long(count2); Out.Ln
+end Day19.
+
