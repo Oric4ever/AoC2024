@@ -1,0 +1,98 @@
+program Day22
+import In,Out
+const BUYERS = 2098
+type Int64 = 64 bits integer
+type Price = array 19,19,19,19 of integer
+var buyer, total: Price
+
+procedure mix(value: integer; var secret: integer)
+begin
+  secret := (secret as set) / (value as set) as integer
+end mix
+
+procedure prune(var secret: integer)
+begin
+  secret := secret mod 16777216
+end prune
+
+procedure next(var secret: integer)
+begin
+  mix(secret * 64, secret)
+  prune(secret)
+  mix(secret div 32, secret)
+  prune(secret)
+  mix(secret * 2048, secret)
+  prune(secret)
+end next
+
+procedure study_buyer(var secret: integer)
+  var a,b,c,d,n: integer
+begin
+  for a := -9 to +9 do
+    for b := -9 to +9 do
+      for c := -9 to +9 do
+        for d := -9 to +9 do buyer[a+9][b+9][c+9][d+9] := -1 end
+      end
+    end
+  end
+
+  a := secret mod 10 ; next(secret)
+  b := secret mod 10 ; next(secret)
+  c := secret mod 10 ; next(secret)
+  d := secret mod 10
+  for n := 4 to 2000 do
+    next(secret)
+    let price = secret mod 10
+    let c1 = b - a + 9
+    let c2 = c - b + 9
+    let c3 = d - c + 9
+    let c4 = price - d + 9
+    if buyer[c1][c2][c3][c4] = -1 then buyer[c1][c2][c3][c4] := price end
+    a := b
+    b := c
+    c := d
+    d := price
+  end
+  
+  for a := -9 to +9 do
+    for b := -9 to +9 do
+      for c := -9 to +9 do
+        for d := -9 to +9 do
+          if buyer[a+9][b+9][c+9][d+9] # -1 then
+            inc(total[a+9][b+9][c+9][d+9], buyer[a+9][b+9][c+9][d+9])
+          end
+        end
+      end
+    end
+  end
+end study_buyer
+
+function max(): integer
+  var a,b,c,d: integer
+begin
+  var max := 0
+  for a := -9 to +9 do
+    for b := -9 to +9 do
+      for c := -9 to +9 do
+        for d := -9 to +9 do
+          if total[a+9][b+9][c+9][d+9] > max then
+            max := total[a+9][b+9][c+9][d+9]
+          end
+        end
+      end
+    end
+  end
+  return max
+end max
+  
+  var i, n, secret: integer
+      sum: Int64
+begin 
+  for i := 1 to BUYERS do
+    In.Int(secret)
+    study_buyer(secret)
+    inc(sum, Int64(secret))
+  end
+  Out.Long(sum); Out.Ln
+  Out.Int(max()); Out.Ln
+end Day22.
