@@ -1,0 +1,106 @@
+program Day23
+import In,Out
+const NB_LINKS  = 3380
+      MAX_INDEX = 26*26-1
+type Set = 676 bits set
+var links: array 26*26 of Set
+    computers: Set
+
+function index_of(ch: char): integer
+  return ord(ch) - ord("a")
+end index_of
+
+function code_of(name: array of char): integer
+  return ord(index_of(name[0]))*26 + ord(index_of(name[1]))
+end code_of
+
+procedure print_name(index: integer)
+begin
+  Out.Char(chr(index div 26 + ord("a")))
+  Out.Char(chr(index mod 26 + ord("a")))
+end print_name
+
+procedure read_links
+  var n, i, j : integer
+      name    : array 2 of char
+begin
+  for n := 1 to NB_LINKS do
+    In.Char(name[0]); In.Char(name[1]); i := code_of(name) ; incl(computers, i)
+    In.Char(name[0]); assert(name[0] = "-")
+    In.Char(name[0]); In.Char(name[1]); j := code_of(name) ; incl(computers, j)
+    In.SkipLine
+    incl(links[i], j)
+    incl(links[j], i) 
+  end
+end read_links
+
+function triples(): integer
+  var a, b, c : integer
+begin
+  var count := 0
+  for a := 0 to MAX_INDEX do if a in computers then  (* TODO: implement an iteration on set elements *)
+    for b := a+1 to MAX_INDEX do if b in links[a] then
+      for c := b+1 to MAX_INDEX do if (c in links[a]) and (c in links[b]) then
+        if (a div 26 = index_of("t")) or (b div 26 = index_of("t")) or (c div 26 = index_of("t")) then inc(count) end
+      end end
+    end end
+  end end
+  return count
+end triples
+
+function all_connected(group: Set):boolean
+  var i, j: integer
+begin
+  var meshed := true
+  for i := 0 to MAX_INDEX do if i in group then
+    for j := i+1 to MAX_INDEX do if j in group then
+      meshed := meshed and (j in links[i])
+    end end
+  end end
+  return meshed
+end all_connected
+
+function less_connected(group: Set): integer
+  var i, j, intrus: integer
+begin
+  var max_count      := 0
+  for i := 0 to MAX_INDEX do if i in group then
+    var count := 0
+    for j := 0 to MAX_INDEX do if j in group then
+      if not (j in links[i]) then inc(count) end
+    end end
+    if count > max_count then max_count := count ; intrus := i end
+  end end
+  return intrus
+end less_connected
+
+procedure print(group: Set)
+  var i: integer
+begin
+  for i := 0 to MAX_INDEX do if i in group then
+    print_name(i); Out.Char(",")
+  end end
+  Out.Ln
+end print
+
+procedure print_meshed_groups
+  var i : integer
+      lanparty: Set
+begin
+  for i := code_of("ta") to code_of("tz") do if i in computers then
+    lanparty := links[i]
+    incl(lanparty, i)
+
+    while not all_connected(lanparty) do
+      excl(lanparty, less_connected(lanparty))
+    end
+
+    print(lanparty)
+  end end
+end print_meshed_groups
+
+begin
+  read_links
+  Out.Int(triples()); Out.Ln
+  print_meshed_groups
+end Day23.
