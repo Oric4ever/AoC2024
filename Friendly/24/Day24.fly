@@ -1,4 +1,10 @@
 program Day24
+(* partly manual process for part 2:
+  first  execution gives first  pair of wires to swap => swap them in input (=> input2)
+  second execution gives second pair of wires to swap => swap them in input2 (=> input3)
+  third  execution gives third  pair of wires to swap => swap them in input3 (=> input4)
+  fourth execution reveals a problem with additionner #36
+*)
 import In,Out
 const UNKNOWN = -1
       INPUT_SIZE  = 45
@@ -17,19 +23,17 @@ var wires : array MAX_WIRES of integer
     names : array MAX_WIRES of Name
     nb_gates, nb_names: integer
 
-function digit(ch: char): integer; return ord(ch)-ord("0"); end digit
-
 function wire_index(name: Name): integer
 begin
-  var index := 0
-  while (index < nb_names) and (names[index] # name) do inc(index) end
+  var index := 1
+  while (index <= nb_names) and (names[index] # name) do inc(index) end
   return index
 end wire_index
 
 procedure add_wire(name: Name): integer
 begin
   var index := wire_index(name)
-  if index = nb_names then 
+  if index > nb_names then 
     wires[index] := UNKNOWN
     inc(nb_names)
   end
@@ -55,6 +59,7 @@ procedure read_gates
 begin
   In.String(buf, " ")
   while (buf[0] >= "a") and (buf[0] <= "z") do
+    inc(nb_gates)
     gates[nb_gates].input1 := add_wire(buf)
     In.String(buf, " ")
     gates[nb_gates].operator := if buf = "AND" then OP_AND else (if buf = "OR" then OP_OR else OP_XOR)
@@ -63,7 +68,6 @@ begin
     In.String(buf, " ")
     In.Line(buf)
     gates[nb_gates].output := add_wire(buf)
-    inc(nb_gates)
     In.String(buf, " ")
   end
 end read_gates
@@ -84,7 +88,7 @@ begin
   var processed := true
   while processed do
     processed := false
-    for i := 0 to nb_gates-1 do
+    for i := 1 to nb_gates do
       if (wires[gates[i].output] = UNKNOWN) and (wires[gates[i].input1] # UNKNOWN) and (wires[gates[i].input2] # UNKNOWN) then
         process_gate(i)
         processed := true
@@ -114,9 +118,102 @@ begin
   return value
 end z_bus
 
+procedure print_op(op: integer)
+begin
+  case op of
+> | 0: Out.String(" AND ")
+> | 1: Out.String(" OR  ")
+> | 2: Out.String(" XOR ")
+> end
+end print_op
+
+var carry, carry1, xor1, xor2, carry2, and2op, xor2op : array INPUT_SIZE of integer
+
+procedure check
+  var name: Name
+      bit, i, x_index, y_index, z_index : integer
+begin
+  (* bit 0 addition is simpler (no input carry) *)
+  name := "x00"; x_index := wire_index(name)
+  name := "y00"; y_index := wire_index(name)
+  name := "z00"; z_index := wire_index(name)
+  for i := 1 to nb_gates do
+    if (gates[i].input1 = x_index) and (gates[i].input2 = y_index)
+>   or (gates[i].input1 = y_index) and (gates[i].input2 = x_index)
+    then
+      if    gates[i].operator = OP_AND then carry1[0] := gates[i].output
+      elsif gates[i].operator = OP_XOR then   xor1[0] := gates[i].output
+      end
+    end
+  end
+  carry[0] := carry1[0]
+  assert( xor1[0] = z_index )
+
+  (* other bits require two sums :
+     - first  sum is x + y -> xor1, carry1
+     - second sum is either xor1 + propagated_carry -> z, carry2
+                         or xor1 + carry1 -> z, carry2
+     - carry1 or carry2 -> propagated_carry
+  *)
+  for bit := 1 to INPUT_SIZE-1 do
+Out.Int(bit); Out.String(": ")
+    name[1] := chr( ord("0") + bit div 10)
+    name[2] := chr( ord("0") + bit mod 10)
+
+    name[0] := "x"; x_index := wire_index(name)
+    name[0] := "y"; y_index := wire_index(name)
+    name[0] := "z"; z_index := wire_index(name)
+
+    (* find the gates of the first sum *)
+    for i := 1 to nb_gates do
+      if (gates[i].input1 = x_index) and (gates[i].input2 = y_index)
+>     or (gates[i].input1 = y_index) and (gates[i].input2 = x_index)
+      then
+        if    gates[i].operator = OP_AND then carry1[bit] := gates[i].output
+        elsif gates[i].operator = OP_XOR then   xor1[bit] := gates[i].output
+        end
+      end
+    end
+    if  carry1[bit] = 0       then Out.String(" (carry2 calculation not found)") end
+    if    xor1[bit] = 0       then Out.String(" (xor2 calculation not found)")   end
+
+    (* find the gates of the second sum *)
+    for i := 1 to nb_gates do
+      if (gates[i].input1 = xor1[bit]) and (gates[i].input2 = carry[bit-1])
+>     or (gates[i].input2 = xor1[bit]) and (gates[i].input1 = carry[bit-1])
+      then
+        if    gates[i].operator = OP_AND then carry2[bit] := gates[i].output
+        elsif gates[i].operator = OP_XOR then   xor2[bit] := gates[i].output
+        end
+      end
+    end
+
+    if  carry2[bit] = 0       then Out.String(" (carry2 calculation not found)") end
+    if    xor2[bit] = 0       then Out.String(" (xor2 calculation not found)")
+    elsif xor2[bit] # z_index then Out.String(name); Out.String(" replaced by "); Out.String(names[xor2[bit]])
+    end
+
+    (* find the gate of carry = carry1 or carry2 *)
+    for i := 1 to nb_gates do
+      if (gates[i].input1 = carry1[bit]) and (gates[i].input2 = carry2[bit])
+>     or (gates[i].input2 = carry1[bit]) and (gates[i].input1 = carry2[bit])
+      then
+        if      gates[i].operator = OP_OR  then carry[bit] := gates[i].output
+        else Out.String(names[carry1[bit]]); Out.String(" or "); Out.String(names[carry2[bit]]); Out.String(" is wrong")
+        end
+      end
+    end
+
+    Out.Ln
+  end
+ 
+end check
+    
 begin 
   read_wires
   read_gates
   flow
   Out.Long(z_bus()); Out.Ln
+
+  check
 end Day24.
