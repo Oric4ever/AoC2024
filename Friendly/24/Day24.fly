@@ -1,0 +1,122 @@
+program Day24
+import In,Out
+const UNKNOWN = -1
+      INPUT_SIZE  = 45
+      OP_AND  = 0
+      OP_OR   = 1
+      OP_XOR  = 2
+      MAX_WIRES = 500
+type Gate = record
+              input1, input2, operator, output: integer
+            end
+     Name = array 4 of char
+     Int64 = 64 bits integer
+
+var wires : array MAX_WIRES of integer
+    gates : array MAX_WIRES of Gate
+    names : array MAX_WIRES of Name
+    nb_gates, nb_names: integer
+
+function digit(ch: char): integer; return ord(ch)-ord("0"); end digit
+
+function wire_index(name: Name): integer
+begin
+  var index := 0
+  while (index < nb_names) and (names[index] # name) do inc(index) end
+  return index
+end wire_index
+
+procedure add_wire(name: Name): integer
+begin
+  var index := wire_index(name)
+  if index = nb_names then 
+    wires[index] := UNKNOWN
+    inc(nb_names)
+  end
+  names[index] := name
+  return index
+end add_wire
+
+procedure read_wires
+  var name  : Name
+      i, index, value : integer
+begin
+  for index := 1 to 2*INPUT_SIZE do
+    In.String(name, ":")
+    In.Int(value)
+    In.SkipLine
+    wires[add_wire(name)] := value
+  end
+  In.SkipLine
+end read_wires
+
+procedure read_gates
+  var buf: Name
+begin
+  In.String(buf, " ")
+  while (buf[0] >= "a") and (buf[0] <= "z") do
+    gates[nb_gates].input1 := add_wire(buf)
+    In.String(buf, " ")
+    gates[nb_gates].operator := if buf = "AND" then OP_AND else (if buf = "OR" then OP_OR else OP_XOR)
+    In.String(buf, " ")
+    gates[nb_gates].input2 := add_wire(buf)
+    In.String(buf, " ")
+    In.Line(buf)
+    gates[nb_gates].output := add_wire(buf)
+    inc(nb_gates)
+    In.String(buf, " ")
+  end
+end read_gates
+
+procedure process_gate(i: integer)
+begin
+  let operator = gates[i].operator
+  case operator of
+> | OP_AND : wires[gates[i].output] := ord( wires[gates[i].input1] * wires[gates[i].input2] # 0 )
+> | OP_OR  : wires[gates[i].output] := ord( wires[gates[i].input1] + wires[gates[i].input2] # 0 )
+> | OP_XOR : wires[gates[i].output] := ord( wires[gates[i].input1] # wires[gates[i].input2] )
+> end
+end process_gate
+
+procedure flow
+  var i: integer
+begin
+  var processed := true
+  while processed do
+    processed := false
+    for i := 0 to nb_gates-1 do
+      if (wires[gates[i].output] = UNKNOWN) and (wires[gates[i].input1] # UNKNOWN) and (wires[gates[i].input2] # UNKNOWN) then
+        process_gate(i)
+        processed := true
+      end
+    end
+  end
+end flow
+
+procedure print
+  var i: integer
+begin
+  for i := 0 to nb_names do
+    Out.String(names[i]); Out.String(": "); Out.Int(wires[i]); Out.Ln
+  end
+end print
+
+function z_bus(): Int64
+  var name : Name
+begin
+  name := "z46"
+  var value := Int64(0)
+  while name # "z00" do
+    if name[2] = "0" then name[2] := "9"; name[1] := chr(ord(name[1]) - 1) else name[2] := chr(ord(name[2]) - 1) end
+    assert( wires[wire_index(name)] # UNKNOWN )
+    value := value * Int64(2) + Int64(wires[wire_index(name)])
+  end
+  return value
+end z_bus
+
+begin 
+  read_wires
+  read_gates
+  flow
+  Out.Long(z_bus()); Out.Ln
+end Day24.
