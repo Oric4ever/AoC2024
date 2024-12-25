@@ -1,0 +1,45 @@
+program Day25
+import In,Out
+const NB = 500
+type Schematic = array 5 of integer
+var schemes : array NB+1 of Schematic
+    is_lock : array NB+1 of boolean
+
+procedure read_input
+  var i,j,n: integer
+      lines: array 7,6 of char
+begin
+  for n := 1 to NB do
+    for j := 0 to 6 do In.Line(lines[j]) end
+    In.SkipLine
+
+    is_lock[n] := lines[0] = "#####"
+    for j := 1 to 5 do 
+      for i := 0 to 4 do 
+        if lines[j][i] = "#" then inc(schemes[n][i]) end
+      end
+    end
+  end
+end read_input
+
+function nb_fits(): integer
+  var lock, key, i: integer
+begin
+  var count := 0
+  for lock := 1 to NB do if is_lock[lock] then
+    for key := 1 to NB do if not is_lock[key] then
+      var overlaps := false
+      for i := 0 to 4 do
+        if schemes[lock][i] + schemes[key][i] > 5 then overlaps := true end
+      end
+      if not overlaps then inc(count) end
+    end end
+  end end
+  return count
+end nb_fits
+
+begin 
+  read_input
+  Out.Int(nb_fits()); Out.Ln
+end Day25.
+     
