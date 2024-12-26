@@ -1,4 +1,4 @@
-program Day16a
+program Day16
 import In,Out
 const MSIZE = 141
       QSIZE = 16384
@@ -13,13 +13,14 @@ type Queue = record
                first, last: integer
                state      : array QSIZE of State
              end
-var map : array MSIZE,MSIZE of char
-    best: array MSIZE,MSIZE,4 of integer
-    current,next : Queue
+type Dists = array MSIZE,MSIZE,4 of integer
+var map           : array MSIZE,MSIZE of char
+    dist_S, dist_E: Dists
+    current, next : Queue
 
 function min(a,b: integer):integer; return if a<b then a else b; end min
 
-procedure enqueue(x,y,dir,score: integer; var queue: Queue)
+procedure enqueue(x,y,dir,score: integer; var queue: Queue; var best: Dists)
 begin
   if score < best[y][x][dir] then
     best[y][x][dir] := score
@@ -68,7 +69,7 @@ begin
 > end
 end move
 
-procedure bfs
+procedure bfs(startX, startY, endX, endY: integer; var best: Dists)
   var x,y,dir,score: integer
 begin
   for y := 0 to MSIZE-1 do
@@ -78,8 +79,7 @@ begin
       end
     end
   end
-  enqueue(1, MSIZE-2, EAST, 0, current)
-  assert(map[MSIZE-2][1] = "S")
+  enqueue(startX, startY, if startX = 1 then EAST else WEST, 0, current, best)
 
   while not is_empty(current) or not is_empty(next) do
     if is_empty(current) then
@@ -87,17 +87,33 @@ begin
       next.first := next.last
     end
     dequeue(x,y,dir,score, current)
-    if can_move(x, y, (dir + 1) mod 4) then enqueue(x,y,(dir + 1) mod 4,score+1000, next) end
-    if can_move(x, y, (dir + 3) mod 4) then enqueue(x,y,(dir + 3) mod 4,score+1000, next) end
-    if can_move(x, y, dir)             then move(x,y,dir) ; enqueue(x,y,dir,score+1, current)   end
+    if can_move(x, y, (dir + 1) mod 4) then enqueue(x,y,(dir + 1) mod 4,score+1000, next, best) end
+    if can_move(x, y, (dir + 3) mod 4) then enqueue(x,y,(dir + 3) mod 4,score+1000, next, best) end
+    if can_move(x, y, dir)             then move(x,y,dir) ; enqueue(x,y,dir,score+1, current, best)   end
   end
-  Out.Int(min(best[1][MSIZE-2][EAST ], best[1][MSIZE-2][NORTH])); Out.Ln
 end bfs
 
-  var i : integer
+  var x,y,count,best,dir : integer
+      on_path : boolean
 begin
-  for i := 0 to high(map) do In.Line(map[i]) end
+  for y := 0 to high(map) do In.Line(map[y]) end
 
-  bfs
-end Day16a.
+  bfs(1, MSIZE-2, MSIZE-2, 1, dist_S)
+  best := dist_S[1][MSIZE-2][EAST]
+  Out.Int(best); Out.Ln
+
+  bfs(MSIZE-2, 1, 1, MSIZE-2, dist_E)
+
+  for y := 1 to MSIZE-2 do
+    for x := 1 to MSIZE-2 do
+      on_path := false
+      for dir := 0 to 3 do
+        let rev_dir = (dir + 2) mod 4
+        if dist_S[y][x][dir] + dist_E[y][x][rev_dir] = best then on_path := true end
+      end
+      if on_path then inc(count) end
+    end
+  end
+  Out.Int(count); Out.Ln
+end Day16.
 
