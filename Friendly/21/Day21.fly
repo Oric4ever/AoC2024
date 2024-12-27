@@ -1,0 +1,125 @@
+program Day21
+import Input,Read,In,Out,Strings
+const  UP  = 1
+      PUSH = 2
+      LEFT = 3
+      DOWN = 4
+      RIGH = 5
+      A    = 10
+      CRASH= 999999999
+type Sequence = array 8 of char
+     Int64    = 64 bits integer
+
+var dir     : array 5+1,5+1 of Sequence
+    sum1    : integer
+    keypress: array 26,5+1,5+1 of Int64
+    sum2    : Int64
+
+function indexOf(ch: char): integer
+  var index: integer
+begin
+  case ch of
+> | "^": index :=  UP
+> | "A": index := PUSH
+> | "<": index := LEFT
+> | "v": index := DOWN
+> | ">": index := RIGH
+> end
+  return index
+end indexOf
+
+procedure init
+  var i,j,n,start,dest,index: integer
+      path : Input.Path
+      f    : Input.Stream
+      ch   : char
+begin
+  path := "pad.txt"
+  f := Input.Open(path)
+  for i := UP to RIGH do
+    for j := UP to RIGH do
+      Read.String(f, dir[i][j], " ")
+    end
+  end 
+
+  for i := UP to RIGH do
+    for j := UP to RIGH do
+      keypress[0][i][j] := Int64(1)
+    end
+  end
+
+  for n := 1 to 25 do
+    for i := UP to RIGH do
+      for j := UP to RIGH do
+        index := 0
+        start := PUSH
+        ch    := dir[i][j][index]
+        while ch # 0X do
+          dest := indexOf(ch)
+          inc(keypress[n][i][j], keypress[n-1][start][dest])
+          start := dest
+          inc(index)
+          ch    := dir[i][j][index]
+        end
+      end
+    end
+  end
+end init
+
+procedure use_one_dir_pad(seq: array of char; var actions: array of char)
+  var i: integer
+begin
+  actions := ""
+  let length = Strings.Length(seq)
+  var from := PUSH
+  for i := 0 to length-1 do
+    let dest = indexOf(seq[i])
+    Strings.Append(dir[from][dest], actions)
+    from := dest
+  end
+end use_one_dir_pad
+
+procedure remote_control_x2(num: integer; seq: array of char)
+  var actions2, actions3: array 256 of char
+begin
+  actions2 := ""
+  actions3 := ""
+  use_one_dir_pad(seq, actions2)
+  use_one_dir_pad(actions2, actions3)
+  inc(sum1, num*Strings.Length(actions3))
+end remote_control_x2
+
+function remote_control_x25(seq: array of char): Int64
+  var length : Int64
+      start, index : integer
+begin
+  length := Int64(0)
+  index  := 0
+  start  := PUSH
+  while seq[index] # 0X do
+    let dest = indexOf(seq[index])
+    inc(length, keypress[25][start][dest])
+    start := dest
+    inc(index)
+  end
+  return length
+end remote_control_x25
+
+
+begin
+  init
+
+  remote_control_x2(780, "^^^<<A>AvvvA>A")
+  remote_control_x2(539, "<^^Av>A^^AvvvA")
+  remote_control_x2(341, "^A<<^AvA>>vA")
+  remote_control_x2(189, "^<<A^^>A>AvvvA")
+  remote_control_x2(682, "^^A<^AvvAv>A")
+  Out.Int(sum1); Out.Ln
+
+  inc(sum2, Int64(780) * remote_control_x25("^^^<<A>AvvvA>A"))
+  inc(sum2, Int64(539) * remote_control_x25("<^^Av>A^^AvvvA"))
+  inc(sum2, Int64(341) * remote_control_x25("^A<<^AvA>>vA"))
+  inc(sum2, Int64(189) * remote_control_x25("^<<A^^>A>AvvvA"))
+  inc(sum2, Int64(682) * remote_control_x25("^^A<^AvvAv>A"))
+  Out.Long(sum2); Out.Ln
+end Day21.
